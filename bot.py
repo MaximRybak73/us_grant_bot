@@ -16,11 +16,11 @@ from aiogram.fsm.storage.memory import MemoryStorage
 # 1. Токен бота от @BotFather
 BOT_TOKEN = "8945401067:AAHgN4KxT0RPX-LSddmUT86rAErwvkxG5G0"
 
-# 2. Твой цифровой Telegram ID — сюда бот будет слать чеки!
+# 2. Твой цифровой Telegram ID - сюда бот будет слать чеки!
 ADMIN_ID = 1054746088
 
-# 3. Твой юзернейм в Telegram (без @) и ссылки на закрытый канал
-ADMIN_USERNAME = "maksim_dubtsov"
+# 3. Твой юзернейм в Telegram (без @) и ссылки на канал
+ADMIN_USERNAME = "MaxxximSergeevich"
 PRIVATE_CHANNEL_LINK = "https://t.me/+твоя_приватная_ссылка_на_канал"
 PUBLIC_CHANNEL_LINK = "https://t.me/your_us_channel"
 
@@ -30,50 +30,38 @@ PAYMENT_BANKS = "Сбербанк / Т-Банк (СБП)"
 PAYMENT_RECIPIENT = "Максим Сергеевич Д."
 
 # =====================================================================
-# БАЗА ТАРИФОВ И ПРОМОКОДОВ
+# БАЗА ТАРИФОВ И ПРОМОКОДОВ (РОВНО 2 ТАРИФА КАК НА САЙТЕ)
 # =====================================================================
 
 TARIFFS = {
     "tier1": {
-        "name": "📘 База и Гайды",
-        "price": 3990,
-        "old_price": 6500,
+        "name": "🔥 Подача заявки + Обратная связь",
+        "price": 6490,
+        "old_price": 10900,
         "desc": (
-            "• Доступ в закрытый Telegram-канал со всей базой знаний\n"
-            "• Разбор реальных писем, прошедших отбор + шаблон Harvard CV\n"
-            "• Гайд по структуре видеовизитки и подготовке к Duolingo (DET)\n"
-            "• Пошаговая инструкция по заполнению анкеты DS-160\n"
-            "• Закрытый чат участников потока"
+            "• Реальные победные письма SPARK и готовый шаблон резюме Harvard CV\n"
+            "• Помощь с идеей заявки: выбираем сильную тему под твой опыт\n"
+            "• Личная проверка и правка твоего мотивационного эссе и резюме в чате\n"
+            "• Рекомендации по сценарию 2-минутной видеовизитки и тесту Duolingo\n"
+            "• Разбор вопросов отборочного интервью и составление сильных ответов\n"
+            "• Пошаговый гайд и ответы на вопросы по визовой анкете DS-160"
         )
     },
     "tier2": {
-        "name": "🔥 Менторство в Telegram (Хит)",
-        "price": 7990,
-        "old_price": 12900,
+        "name": "💎 VIP: Полное сопровождение + США",
+        "price": 12900,
+        "old_price": 19900,
         "desc": (
-            "• Всё из тарифа «База и Гайды» + закрытые материалы\n"
-            "• Помощь с концепцией заявки: выбираем сильную тему и угол подачи\n"
-            "• Проверка и правка твоего мотивационного письма и Harvard CV\n"
-            "• Рекомендации по сценарию и подаче для видеовизитки\n"
-            "• Подготовка к интервью: разбор вопросов и составление сильных ответов\n"
-            "• Ответы на вопросы по анкете DS-160 и визе J-1 в личном чате"
-        )
-    },
-    "tier3": {
-        "name": "💎 Приоритет + США (VIP)",
-        "price": 14900,
-        "old_price": 24000,
-        "desc": (
-            "• Всё из тарифа «Менторство» с приоритетным разбором без очереди\n"
-            "• Адаптация документов сразу под несколько обменных программ США\n"
-            "• Индивидуальная проработка ответов для комиссии и консула\n"
-            "• Детальная проверка визовых документов перед посольством\n"
-            "• Личный гайд по прилёту: открытие карты Chase, связь и быт в США"
+            "• Всё из первого тарифа с приоритетным разбором без очереди\n"
+            "• Возможность лично звонить мне в Telegram для разбора любых затыков и вопросов\n"
+            "• Индивидуальная подготовка к финальному интервью и разговору с консулом США\n"
+            "• Полная проверка визовой анкеты DS-160 и документов перед поездкой в Казахстан\n"
+            "• Сопровождение по приезде в США: открытие банковской карты Chase, сим-карта, выбор дисциплин в вузе и бытовые вопросы на месте"
         )
     }
 }
 
-# Промокоды: TAMPA27 (с сайта даёт 15%), GRANT20 (секретный за подписку/личку даёт 20%)
+# Промокоды: TAMPA27 (с сайта даёт 15%), GRANT20 (секретный за личку даёт 20%)
 PROMOCODES = {
     "TAMPA27": 15,
     "SPARK15": 15,
@@ -102,7 +90,7 @@ def get_main_menu_kb() -> InlineKeyboardMarkup:
         [InlineKeyboardButton(text="🔥 Тарифы и участие", callback_data="show_tariffs")],
         [
             InlineKeyboardButton(text="🎁 Промокод на -20%", callback_data="get_promo_info"),
-            InlineKeyboardButton(text="🇺🇸 О проекте", callback_data="about_project")
+            InlineKeyboardButton(text="🇺🇸 О подготовке", callback_data="about_project")
         ],
         [InlineKeyboardButton(text="💬 Задать вопрос Максиму", url=f"https://t.me/{ADMIN_USERNAME}")]
     ])
@@ -147,16 +135,16 @@ async def cmd_start(message: Message, state: FSMContext):
     await state.clear()
     uid = message.from_user.id
     if uid not in user_cart:
-        user_cart[uid] = {"discount": 0, "promo_code": None, "tier": "tier2"}
+        user_cart[uid] = {"discount": 0, "promo_code": None, "tier": "tier1"}
 
     welcome_text = (
         f"Привет, <b>{message.from_user.first_name}</b>! 👋\n\n"
-        "Добро пожаловать в <b>US.GRANT // Mentorship</b> - пошаговую систему подготовки к грантовым программам обмена в США ($20,000) от Максима Дубцова.\n\n"
-        "Я сам прошёл весь путь от студента Московского Политеха и получения визы J-1 в Казахстане до 3 месяцев учёбы во Флориде (University of Tampa) и саммита в Колорадо за счёт полного гранта.\n\n"
+        "Добро пожаловать в <b>M.GRANT // SPARK Mentorship</b> - систему подготовки к грантовой программе SPARK в США ($20,000) от финалиста 2026 года Максима Дубцова.\n\n"
+        "Я сам прошёл весь отбор с первого раза: от подачи заявки и получения визы J-1 в Казахстане до 3 месяцев учёбы во Флориде (University of Tampa) и саммита в Колорадо за счёт полного гранта.\n\n"
         "Здесь ты можешь:\n"
-        "• Выбрать формат подготовки (вся работа удобно в Telegram)\n"
+        "• Выбрать тариф личной подготовки со мной в Telegram\n"
         "• Активировать промокод на скидку 15-20%\n"
-        "• Получить мгновенный доступ к закрытым гайдам, реальным письмам и личному разбору\n\n"
+        "• Получить доступ к моим победным письмам, шаблону Harvard CV и личной проверке твоей заявки\n\n"
         "👇 <i>Выбирай нужный пункт в меню ниже:</i>"
     )
     await message.answer(welcome_text, parse_mode="HTML", reply_markup=get_main_menu_kb())
@@ -165,7 +153,7 @@ async def cmd_start(message: Message, state: FSMContext):
 async def cb_back_main(call: CallbackQuery, state: FSMContext):
     await state.clear()
     text = (
-        "<b>Главное меню // US.GRANT Mentorship</b>\n\n"
+        "<b>Главное меню // M.GRANT Mentorship</b>\n\n"
         "Выбери интересующий раздел ниже:"
     )
     await call.message.edit_text(text, parse_mode="HTML", reply_markup=get_main_menu_kb())
@@ -173,10 +161,10 @@ async def cb_back_main(call: CallbackQuery, state: FSMContext):
 @dp.callback_query(F.data == "about_project")
 async def cb_about_project(call: CallbackQuery):
     text = (
-        "🇺🇸 <b>Почему формат работы в Telegram даёт максимальный результат?</b>\n\n"
-        "1. <b>Без воды и часовых лекций:</b> тебе не нужно подстраиваться под расписание созвонов. Ты получаешь выжимку, шаблоны Harvard CV и примеры реальных победных эссе.\n\n"
-        "2. <b>Персональная проверка:</b> на тарифах с менторством ты скидываешь свои черновики и вопросы прямо в чат, а я проверяю их и даю готовые сильные формулировки по американским стандартам.\n\n"
-        "3. <b>Практический опыт 2026 года:</b> актуальная информация по Duolingo (DET), анкете DS-160, получению визы J-1 в Казахстане и открытию банковской карты Chase в США."
+        "🇺🇸 <b>Как проходит наша работа по подготовке к SPARK?</b>\n\n"
+        "1. <b>Никакой сухой теории:</b> ты сразу получаешь мои реальные победные письма SPARK, шаблон Harvard CV и чёткие гайды.\n\n"
+        "2. <b>Личная проверка в Telegram:</b> ты присылаешь свои черновики эссе, резюме и вопросы в личный чат со мной, а я проверяю их и помогаю докрутить формулировки до стандартов комиссии США.\n\n"
+        "3. <b>Поддержка до США (на VIP):</b> возможность созваниваться со мной в Telegram по любым вопросам + помощь уже по прилёту в Америку (открытие карты Chase, сим-карта, выбор предметов в вузе)."
     )
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="🔥 Посмотреть тарифы", callback_data="show_tariffs")],
@@ -187,7 +175,7 @@ async def cb_about_project(call: CallbackQuery):
 @dp.callback_query(F.data == "get_promo_info")
 async def cb_get_promo_info(call: CallbackQuery):
     text = (
-        "🎁 <b>Как получить скидку до 20% на любой тариф?</b>\n\n"
+        "🎁 <b>Как получить скидку до 20% на подготовку к SPARK?</b>\n\n"
         "У тебя есть 2 варианта:\n\n"
         "1️⃣ <b>Базовый промокод с сайта (-15%):</b>\n"
         "Нажми кнопку «Ввести промокод» и напиши код <code>TAMPA27</code> - цены сразу пересчитаются со скидкой 15%.\n\n"
@@ -206,7 +194,7 @@ async def cb_show_tariffs(call: CallbackQuery, state: FSMContext):
     await state.clear()
     uid = call.from_user.id
     if uid not in user_cart:
-        user_cart[uid] = {"discount": 0, "promo_code": None, "tier": "tier2"}
+        user_cart[uid] = {"discount": 0, "promo_code": None, "tier": "tier1"}
 
     discount = user_cart[uid].get("discount", 0)
     promo = user_cart[uid].get("promo_code")
@@ -218,9 +206,9 @@ async def cb_show_tariffs(call: CallbackQuery, state: FSMContext):
     )
 
     text = (
-        "🔥 <b>Выбери свой формат подготовки к гранту $20,000:</b>\n\n"
+        "🔥 <b>Выбери свой формат подготовки к гранту SPARK ($20,000):</b>\n\n"
         f"{promo_status}"
-        "Нажми на любой тариф, чтобы посмотреть полное описание и перейти к оплате:"
+        "Нажми на нужный тариф, чтобы посмотреть полное описание и перейти к оплате:"
     )
     await call.message.edit_text(text, parse_mode="HTML", reply_markup=get_tariffs_kb(uid))
 
@@ -233,7 +221,7 @@ async def cb_select_tariff(call: CallbackQuery):
     else:
         user_cart[uid]["tier"] = tier_key
 
-    t = TARIFFS[tier_key]
+    t = TARIFFS.get(tier_key, TARIFFS["tier1"])
     discount = user_cart[uid].get("discount", 0)
     final_price = int(t["price"] * (100 - discount) / 100)
     price_str = f"{final_price:,} ₽".replace(",", " ")
@@ -247,7 +235,7 @@ async def cb_select_tariff(call: CallbackQuery):
         f"〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️\n"
         f"Старая цена: <s>{old_str}</s>\n"
         f"💰 <b>К оплате сейчас: {price_str}</b>{discount_line}\n\n"
-        "После оплаты ты сразу получаешь доступ к материалам в Telegram."
+        "После оплаты ты сразу получаешь доступ к материалам и личной работе со мной в Telegram."
     )
     await call.message.edit_text(text, parse_mode="HTML", reply_markup=get_tariff_detail_kb(tier_key))
 
@@ -273,7 +261,7 @@ async def process_promo_code(message: Message, state: FSMContext):
     code = message.text.strip().upper()
 
     if uid not in user_cart:
-        user_cart[uid] = {"discount": 0, "promo_code": None, "tier": "tier2"}
+        user_cart[uid] = {"discount": 0, "promo_code": None, "tier": "tier1"}
 
     if code in PROMOCODES:
         disc = PROMOCODES[code]
@@ -283,7 +271,7 @@ async def process_promo_code(message: Message, state: FSMContext):
 
         await message.answer(
             f"🎉 <b>Супер! Промокод {code} активирован!</b>\n"
-            f"Твоя скидка <b>-{disc}%</b> применена ко всем тарифам. Выбирай формат ниже:",
+            f"Твоя скидка <b>-{disc}%</b> применена к обоим тарифам. Выбирай формат ниже:",
             parse_mode="HTML",
             reply_markup=get_tariffs_kb(uid)
         )
@@ -307,7 +295,7 @@ async def process_promo_code(message: Message, state: FSMContext):
 async def cb_pay_tariff(call: CallbackQuery):
     uid = call.from_user.id
     tier_key = call.data.split("_")[1]
-    t = TARIFFS[tier_key]
+    t = TARIFFS.get(tier_key, TARIFFS["tier1"])
     discount = user_cart.get(uid, {}).get("discount", 0)
     final_price = int(t["price"] * (100 - discount) / 100)
     price_str = f"{final_price:,} ₽".replace(",", " ")
@@ -348,9 +336,9 @@ async def cb_send_receipt(call: CallbackQuery, state: FSMContext):
 @dp.message(OrderState.waiting_for_receipt, F.photo | F.document)
 async def process_receipt_file(message: Message, state: FSMContext):
     uid = message.from_user.id
-    user_info = user_cart.get(uid, {"discount": 0, "promo_code": "Нет", "tier": "tier2"})
-    tier_key = user_info.get("tier", "tier2")
-    t = TARIFFS[tier_key]
+    user_info = user_cart.get(uid, {"discount": 0, "promo_code": "Нет", "tier": "tier1"})
+    tier_key = user_info.get("tier", "tier1")
+    t = TARIFFS.get(tier_key, TARIFFS["tier1"])
     discount = user_info.get("discount", 0)
     final_price = int(t["price"] * (100 - discount) / 100)
 
@@ -359,7 +347,7 @@ async def process_receipt_file(message: Message, state: FSMContext):
     # Ответ клиенту
     await message.answer(
         "✅ <b>Чек успешно получен и отправлен на проверку!</b>\n\n"
-        "Обычно подтверждение занимает от 2 до 15 минут. Как только Максим проверит перевод, бот автоматически пришлёт тебе закрытую ссылку и инструкции прямо сюда!",
+        "Обычно подтверждение занимает от 2 до 15 минут. Как только Максим проверит перевод, бот автоматически пришлёт тебе инструкции и доступ прямо сюда!",
         parse_mode="HTML",
         reply_markup=get_main_menu_kb()
     )
@@ -417,15 +405,12 @@ async def cb_admin_approve(call: CallbackQuery):
     parts = call.data.split("_")
     client_id = int(parts[1])
     tier_key = parts[2]
-    t = TARIFFS.get(tier_key, TARIFFS["tier2"])
+    t = TARIFFS.get(tier_key, TARIFFS["tier1"])
 
     access_text = (
-        f"🎉 <b>Твоя оплата подтверждена! Добро пожаловать на борт!</b>\n\n"
+        f"🎉 <b>Твоя оплата подтверждена! Добро пожаловать в M.GRANT!</b>\n\n"
         f"Твой тариф: <b>{t['name']}</b>\n\n"
-        f"1️⃣ <b>Твоя ссылка в закрытый канал с базой и шаблонами:</b>\n"
-        f"👉 {PRIVATE_CHANNEL_LINK}\n\n"
-        f"2️⃣ <b>Личный контакт Максима для разбора и вопросов:</b>\n"
-        f"👉 Напиши мне @{ADMIN_USERNAME} слово <b>«СТАРТ»</b> (если у тебя тариф с менторством или приоритетом), и мы сразу начнём работу над твоей заявкой!"
+        f"👉 <b>Напиши мне в личные сообщения @{ADMIN_USERNAME} слово «СТАРТ»</b>, и я сразу скину тебе победные письма SPARK, шаблон Harvard CV и мы начнём личную работу над твоей заявкой!"
     )
 
     try:
@@ -454,7 +439,7 @@ async def cb_admin_reject(call: CallbackQuery):
         await call.answer(f"Ошибка: {e}", show_alert=True)
 
 async def main():
-    print("🚀 Бот US.GRANT успешно запущен и готов принимать оплаты!")
+    print("🚀 Бот M.GRANT успешно запущен и готов принимать оплаты!")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
