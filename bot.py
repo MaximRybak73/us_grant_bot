@@ -26,11 +26,11 @@ PUBLIC_CHANNEL_LINK = "https://t.me/your_us_channel"
 
 # 4. Реквизиты для перевода по СБП / номеру телефона
 PAYMENT_PHONE = "+79639117097"
-PAYMENT_BANKS = "Сбербанк / Т-Банк (СБП)"
+PAYMENT_BANKS = "Сбербанк"
 PAYMENT_RECIPIENT = "Максим Сергеевич Д."
 
 # =====================================================================
-# БАЗА ТАРИФОВ И ПРОМОКОДОВ (РОВНО 2 ТАРИФА КАК НА САЙТЕ)
+# БАЗА ТАРИФОВ, ЛИЧНОЙ КОНСУЛЬТАЦИИ И ПРОМОКОДОВ
 # =====================================================================
 
 TARIFFS = {
@@ -58,15 +58,24 @@ TARIFFS = {
             "• Полная проверка визовой анкеты DS-160 и документов перед поездкой в Казахстан\n"
             "• Сопровождение по приезде в США: открытие банковской карты Chase, сим-карта, выбор дисциплин в вузе и бытовые вопросы на месте"
         )
+    },
+    "consult": {
+        "name": "💬 Личная консультация (40 минут)",
+        "price": 1490,
+        "old_price": 2500,
+        "desc": (
+            "• Индивидуальный созвон со мной в Telegram (длительность — 40 минут)\n"
+            "• Разбор твоего профиля, опыта и оценка реальных шансов на грант SPARK\n"
+            "• Помощь с выбором сильной темы для мотивационного письма и структуры Harvard CV\n"
+            "• Ответы на любые вопросы по отбору, тесту Duolingo, визе J-1 в Казахстане и жизни в США\n"
+            "• 🗓 <b>Как выбираем время:</b> после оплаты просто напиши мне в личку, и мы с тобой текстом договоримся об удобном дне и времени для звонка!"
+        )
     }
 }
 
-# Промокоды: TAMPA27 (с сайта даёт 15%), GRANT20 (секретный за личку даёт 20%)
+# Промокод с сайта (-15% ДО 7 НОЯБРЯ)
 PROMOCODES = {
-    "TAMPA27": 15,
-    "SPARK15": 15,
-    "GRANT20": 20,
-    "VIP20": 20
+    "TAMPA27": 15
 }
 
 # Состояния пользователя
@@ -88,11 +97,12 @@ dp = Dispatcher(storage=MemoryStorage())
 def get_main_menu_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="🔥 Тарифы и участие", callback_data="show_tariffs")],
+        [InlineKeyboardButton(text="💬 Личная консультация (1 990 ₽)", callback_data="select_consult")],
         [
-            InlineKeyboardButton(text="🎁 Промокод на -20%", callback_data="get_promo_info"),
+            InlineKeyboardButton(text="🎁 СКИДКА -15% ДО 7 НОЯБРЯ", callback_data="get_promo_info"),
             InlineKeyboardButton(text="🇺🇸 О подготовке", callback_data="about_project")
         ],
-        [InlineKeyboardButton(text="💬 Задать вопрос Максиму", url=f"https://t.me/{ADMIN_USERNAME}")]
+        [InlineKeyboardButton(text="✍️ Задать вопрос Максиму", url=f"https://t.me/{ADMIN_USERNAME}")]
     ])
 
 def get_tariffs_kb(user_id: int) -> InlineKeyboardMarkup:
@@ -107,23 +117,23 @@ def get_tariffs_kb(user_id: int) -> InlineKeyboardMarkup:
             btn_text = f"{t['name']} - {price_str}"
         buttons.append([InlineKeyboardButton(text=btn_text, callback_data=f"select_{key}")])
     
-    buttons.append([InlineKeyboardButton(text="🎟 Ввести промокод", callback_data="enter_promo")])
+    buttons.append([InlineKeyboardButton(text="🎟 Ввести промокод (TAMPA27)", callback_data="enter_promo")])
     buttons.append([InlineKeyboardButton(text="⬅️ В главное меню", callback_data="back_main")])
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 def get_tariff_detail_kb(tier_key: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="💳 Перейти к оплате", callback_data=f"pay_{tier_key}")],
-        [InlineKeyboardButton(text="🎟 Ввести промокод на скидку", callback_data="enter_promo")],
+        [InlineKeyboardButton(text="🎟 Ввести промокод на скидку -15%", callback_data="enter_promo")],
         [InlineKeyboardButton(text="💬 Уточнить вопрос у Максима", url=f"https://t.me/{ADMIN_USERNAME}")],
-        [InlineKeyboardButton(text="⬅️ Назад к тарифам", callback_data="show_tariffs")]
+        [InlineKeyboardButton(text="⬅️ Назад к выбору форматов", callback_data="show_tariffs")]
     ])
 
 def get_payment_kb(tier_key: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="✅ Я оплатил(а) - отправить чек", callback_data=f"send_receipt_{tier_key}")],
         [InlineKeyboardButton(text="💬 Написать Максиму в личку", url=f"https://t.me/{ADMIN_USERNAME}")],
-        [InlineKeyboardButton(text="⬅️ Назад к описанию тарифа", callback_data=f"select_{tier_key}")]
+        [InlineKeyboardButton(text="⬅️ Назад к описанию", callback_data=f"select_{tier_key}")]
     ])
 
 # =====================================================================
@@ -139,12 +149,12 @@ async def cmd_start(message: Message, state: FSMContext):
 
     welcome_text = (
         f"Привет, <b>{message.from_user.first_name}</b>! 👋\n\n"
-        "Добро пожаловать в <b>M.GRANT // SPARK Mentorship</b> - систему подготовки к грантовой программе SPARK в США ($20,000) от финалиста 2026 года Максима Дубцова.\n\n"
+        "Добро пожаловать в <b>US.GRANT // SPARK Mentorship</b> - систему подготовки к грантовой программе SPARK в США ($20,000) от финалиста 2026 года Максима Дубцова.\n\n"
         "Я сам прошёл весь отбор с первого раза: от подачи заявки и получения визы J-1 в Казахстане до 3 месяцев учёбы во Флориде (University of Tampa) и саммита в Колорадо за счёт полного гранта.\n\n"
         "Здесь ты можешь:\n"
-        "• Выбрать тариф личной подготовки со мной в Telegram\n"
-        "• Активировать промокод на скидку 15-20%\n"
-        "• Получить доступ к моим победным письмам, шаблону Harvard CV и личной проверке твоей заявки\n\n"
+        "• Выбрать тариф полного менторства со мной в Telegram\n"
+        "• Записаться на <b>разовую личную консультацию (1 990 ₽)</b>\n"
+        "• Активировать промокод с сайта <code>TAMPA27</code> на <b>СКИДКУ -15% (ДЕЙСТВУЕТ ДО 7 НОЯБРЯ!)</b>\n\n"
         "👇 <i>Выбирай нужный пункт в меню ниже:</i>"
     )
     await message.answer(welcome_text, parse_mode="HTML", reply_markup=get_main_menu_kb())
@@ -153,7 +163,7 @@ async def cmd_start(message: Message, state: FSMContext):
 async def cb_back_main(call: CallbackQuery, state: FSMContext):
     await state.clear()
     text = (
-        "<b>Главное меню // M.GRANT Mentorship</b>\n\n"
+        "<b>Главное меню // US.GRANT Mentorship</b>\n\n"
         "Выбери интересующий раздел ниже:"
     )
     await call.message.edit_text(text, parse_mode="HTML", reply_markup=get_main_menu_kb())
@@ -162,12 +172,13 @@ async def cb_back_main(call: CallbackQuery, state: FSMContext):
 async def cb_about_project(call: CallbackQuery):
     text = (
         "🇺🇸 <b>Как проходит наша работа по подготовке к SPARK?</b>\n\n"
-        "1. <b>Никакой сухой теории:</b> ты сразу получаешь мои реальные победные письма SPARK, шаблон Harvard CV и чёткие гайды.\n\n"
+        "1. <b>Никакой сухой теории:</b> на менторстве ты сразу получаешь мои реальные победные письма SPARK, шаблон Harvard CV и чёткие гайды.\n\n"
         "2. <b>Личная проверка в Telegram:</b> ты присылаешь свои черновики эссе, резюме и вопросы в личный чат со мной, а я проверяю их и помогаю докрутить формулировки до стандартов комиссии США.\n\n"
-        "3. <b>Поддержка до США (на VIP):</b> возможность созваниваться со мной в Telegram по любым вопросам + помощь уже по прилёту в Америку (открытие карты Chase, сим-карта, выбор предметов в вузе)."
+        "3. <b>Поддержка до США (на VIP):</b> возможность созваниваться со мной в Telegram по любым вопросам + помощь уже по прилёту в Америку (открытие карты Chase, сим-карта, выбор предметов в вузе).\n\n"
+        "4. <b>Личная консультация (40 минут):</b> если пока не готов брать полное менторство, можешь записаться на разовый созвон со мной за 1 990 ₽ — разберём твой кейс и все вопросы!"
     )
     kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🔥 Посмотреть тарифы", callback_data="show_tariffs")],
+        [InlineKeyboardButton(text="🔥 Посмотреть тарифы и консультацию", callback_data="show_tariffs")],
         [InlineKeyboardButton(text="⬅️ В главное меню", callback_data="back_main")]
     ])
     await call.message.edit_text(text, parse_mode="HTML", reply_markup=kb)
@@ -175,16 +186,18 @@ async def cb_about_project(call: CallbackQuery):
 @dp.callback_query(F.data == "get_promo_info")
 async def cb_get_promo_info(call: CallbackQuery):
     text = (
-        "🎁 <b>Как получить скидку до 20% на подготовку к SPARK?</b>\n\n"
-        "У тебя есть 2 варианта:\n\n"
-        "1️⃣ <b>Базовый промокод с сайта (-15%):</b>\n"
-        "Нажми кнопку «Ввести промокод» и напиши код <code>TAMPA27</code> - цены сразу пересчитаются со скидкой 15%.\n\n"
-        "2️⃣ <b>Повышенный промокод от Максима (-20%):</b>\n"
-        "Напиши мне в личные сообщения слово <b>«ГРАНТ»</b>, коротко расскажи, на каком ты курсе, и я выдам тебе персональный промокод на <b>20% скидки</b>!"
+        "🔥 <b>СКИДКА -15% С САЙТА ДЕЙСТВУЕТ ТОЛЬКО ДО 7 НОЯБРЯ!</b>\n\n"
+        "Используй промокод с сайта, чтобы зафиксировать сниженную цену:\n"
+        "🎟 Промокод: <code>TAMPA27</code>\n\n"
+        "<b>Как применить скидку:</b>\n"
+        "1. Нажми кнопку <b>«🎟 Ввести промокод сейчас»</b> ниже.\n"
+        "2. Отправь в чат код <code>TAMPA27</code>.\n"
+        "3. Цены автоматически пересчитаются со скидкой <b>-15%</b>!\n\n"
+        "⚡️ <i>Успей активировать промокод ДО 7 НОЯБРЯ!</i>"
     )
     kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="💬 Написать Максиму «ГРАНТ»", url=f"https://t.me/{ADMIN_USERNAME}")],
         [InlineKeyboardButton(text="🎟 Ввести промокод сейчас", callback_data="enter_promo")],
+        [InlineKeyboardButton(text="🔥 Перейти к тарифам", callback_data="show_tariffs")],
         [InlineKeyboardButton(text="⬅️ В главное меню", callback_data="back_main")]
     ])
     await call.message.edit_text(text, parse_mode="HTML", reply_markup=kb)
@@ -202,13 +215,13 @@ async def cb_show_tariffs(call: CallbackQuery, state: FSMContext):
     promo_status = (
         f"✅ <b>Активен промокод {promo} (скидка -{discount}%)</b>\n\n"
         if discount > 0 else
-        "💡 <i>У тебя есть промокод? Нажми «Ввести промокод» ниже для пересчёта цен.</i>\n\n"
+        "🔥 <i>ПРОМОКОД С САЙТА <code>TAMPA27</code> НА СКИДКУ -15% ДЕЙСТВУЕТ ДО 7 НОЯБРЯ! Нажми «Ввести промокод» ниже для пересчёта цен.</i>\n\n"
     )
 
     text = (
-        "🔥 <b>Выбери свой формат подготовки к гранту SPARK ($20,000):</b>\n\n"
+        "🔥 <b>Выбери свой формат подготовки к гранту SPARK ($20,000) или разовую консультацию:</b>\n\n"
         f"{promo_status}"
-        "Нажми на нужный тариф, чтобы посмотреть полное описание и перейти к оплате:"
+        "Нажми на нужный вариант ниже, чтобы посмотреть подробности и перейти к оплате:"
     )
     await call.message.edit_text(text, parse_mode="HTML", reply_markup=get_tariffs_kb(uid))
 
@@ -229,13 +242,23 @@ async def cb_select_tariff(call: CallbackQuery):
 
     discount_line = f" (с учётом твоей скидки -{discount}%!)" if discount > 0 else ""
 
+    if tier_key == "consult":
+        bottom_note = (
+            "После оплаты и отправки чека в бот просто напиши мне в личные сообщения, "
+            "и мы с тобой текстом выберем удобное время для 40-минутного звонка!"
+        )
+    else:
+        bottom_note = (
+            "После оплаты ты сразу получаешь доступ к материалам и личной работе со мной в Telegram."
+        )
+
     text = (
         f"<b>{t['name']}</b>\n\n"
         f"<b>Что входит в этот формат:</b>\n{t['desc']}\n\n"
         f"〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️\n"
         f"Старая цена: <s>{old_str}</s>\n"
         f"💰 <b>К оплате сейчас: {price_str}</b>{discount_line}\n\n"
-        "После оплаты ты сразу получаешь доступ к материалам и личной работе со мной в Telegram."
+        f"{bottom_note}"
     )
     await call.message.edit_text(text, parse_mode="HTML", reply_markup=get_tariff_detail_kb(tier_key))
 
@@ -247,8 +270,8 @@ async def cb_select_tariff(call: CallbackQuery):
 async def cb_enter_promo(call: CallbackQuery, state: FSMContext):
     await state.set_state(OrderState.waiting_for_promo)
     text = (
-        "🎟 <b>Введи свой промокод ответным сообщением в чат:</b>\n\n"
-        "<i>Например: TAMPA27 (или персональный код на -20%, если ты получил его у Максима в личке).</i>"
+        "🎟 <b>Введи промокод с сайта ответным сообщением в чат:</b>\n\n"
+        "<i>Подсказка: промокод <code>TAMPA27</code> даёт скидку -15% ДО 7 НОЯБРЯ!</i>"
     )
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="⬅️ Отмена", callback_data="show_tariffs")]
@@ -271,18 +294,18 @@ async def process_promo_code(message: Message, state: FSMContext):
 
         await message.answer(
             f"🎉 <b>Супер! Промокод {code} активирован!</b>\n"
-            f"Твоя скидка <b>-{disc}%</b> применена к обоим тарифам. Выбирай формат ниже:",
+            f"Твоя скидка <b>-{disc}% (действует ДО 7 НОЯБРЯ)</b> применена. Выбирай нужный формат ниже:",
             parse_mode="HTML",
             reply_markup=get_tariffs_kb(uid)
         )
     else:
         kb = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="🔥 Перейти к тарифам", callback_data="show_tariffs")],
-            [InlineKeyboardButton(text="💬 Попросить промокод у Максима", url=f"https://t.me/{ADMIN_USERNAME}")]
+            [InlineKeyboardButton(text="🎟 Попробовать ещё раз", callback_data="enter_promo")],
+            [InlineKeyboardButton(text="🔥 Перейти к тарифам", callback_data="show_tariffs")]
         ])
         await message.answer(
             "❌ <b>Такого промокода не найдено.</b>\n"
-            "Проверь правильность написания (например, <code>TAMPA27</code>) или напиши Максиму в личку!",
+            "Проверь правильность написания: действующий промокод с сайта на скидку -15% (ДО 7 НОЯБРЯ) — <code>TAMPA27</code>",
             parse_mode="HTML",
             reply_markup=kb
         )
@@ -300,17 +323,25 @@ async def cb_pay_tariff(call: CallbackQuery):
     final_price = int(t["price"] * (100 - discount) / 100)
     price_str = f"{final_price:,} ₽".replace(",", " ")
 
+    if tier_key == "consult":
+        step3_text = (
+            "3. Пришли скриншот или PDF квитанции сюда в чат, после чего напиши Максиму в личку, "
+            "чтобы договориться о точном времени звонка!"
+        )
+    else:
+        step3_text = "3. Пришли скриншот или PDF квитанции сюда в чат!"
+
     text = (
-        f"💳 <b>Оформление доступа: {t['name']}</b>\n"
+        f"💳 <b>Оформление: {t['name']}</b>\n"
         f"Сумма к оплате: <b>{price_str}</b>\n\n"
         "<b>Реквизиты для перевода по СБП (с любого банка):</b>\n"
-        f"📱 Номер телефона: <code>{PAYMENT_PHONE}</code> <i>(нажми на номер, он скопируется)</i>\n"
+        f"📱 Номер телефона: <code>{PAYMENT_PHONE}</code>\n"
         f"🏦 Банк: <b>{PAYMENT_BANKS}</b>\n"
         f"👤 Получатель: <b>{PAYMENT_RECIPIENT}</b>\n\n"
-        "<b>Как получить доступ за 1 минуту:</b>\n"
+        "<b>Как подтвердить оплату за 1 минуту:</b>\n"
         f"1. Скопируй номер <code>{PAYMENT_PHONE}</code> и переведи <b>{price_str}</b> по СБП.\n"
         "2. Нажми кнопку <b>«✅ Я оплатил(а) - отправить чек»</b> ниже.\n"
-        "3. Пришли скриншот или PDF квитанции сюда в чат!"
+        f"{step3_text}"
     )
     await call.message.edit_text(text, parse_mode="HTML", reply_markup=get_payment_kb(tier_key))
 
@@ -326,7 +357,7 @@ async def cb_send_receipt(call: CallbackQuery, state: FSMContext):
     await state.set_state(OrderState.waiting_for_receipt)
     text = (
         "📸 <b>Отправь скриншот или файл (PDF) чека об оплате прямо в этот чат:</b>\n\n"
-        "<i>Как только ты отправишь фото или документ, я сразу передам его Максиму для открытия доступа!</i>"
+        "<i>Как только ты отправишь фото или документ, я сразу передам его Максиму для подтверждения!</i>"
     )
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="⬅️ Назад к реквизитам", callback_data=f"pay_{tier_key}")]
@@ -344,10 +375,20 @@ async def process_receipt_file(message: Message, state: FSMContext):
 
     await state.clear()
 
+    if tier_key == "consult":
+        client_reply = (
+            "✅ <b>Чек за личную консультацию (40 минут) получен и отправлен Максиму!</b>\n\n"
+            f"Напиши сейчас Максиму в личные сообщения @{ADMIN_USERNAME}, в какой день и время тебе удобно созвониться — после проверки чека вы сразу согласуете время звонка!"
+        )
+    else:
+        client_reply = (
+            "✅ <b>Чек успешно получен и отправлен на проверку!</b>\n\n"
+            "Обычно подтверждение занимает от 2 до 15 минут. Как только Максим проверит перевод, бот автоматически пришлёт тебе инструкции и доступ прямо сюда!"
+        )
+
     # Ответ клиенту
     await message.answer(
-        "✅ <b>Чек успешно получен и отправлен на проверку!</b>\n\n"
-        "Обычно подтверждение занимает от 2 до 15 минут. Как только Максим проверит перевод, бот автоматически пришлёт тебе инструкции и доступ прямо сюда!",
+        client_reply,
         parse_mode="HTML",
         reply_markup=get_main_menu_kb()
     )
@@ -358,14 +399,14 @@ async def process_receipt_file(message: Message, state: FSMContext):
         "🚨 <b>НОВАЯ ОПЛАТА В БОТЕ!</b>\n\n"
         f"👤 <b>Клиент:</b> {message.from_user.full_name} ({username_str})\n"
         f"🆔 <b>ID:</b> <code>{uid}</code>\n"
-        f"📦 <b>Тариф:</b> {t['name']}\n"
+        f"📦 <b>Формат:</b> {t['name']}\n"
         f"🎟 <b>Промокод:</b> {user_info.get('promo_code') or 'Без промокода'} (-{discount}%)\n"
         f"💰 <b>Ожидаемая сумма:</b> {final_price} ₽\n\n"
         "Проверь поступление на карту и нажми кнопку ниже:"
     )
 
     admin_kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="✅ Подтвердить и выдать доступ", callback_data=f"approve_{uid}_{tier_key}")],
+        [InlineKeyboardButton(text="✅ Подтвердить оплату", callback_data=f"approve_{uid}_{tier_key}")],
         [InlineKeyboardButton(text="❌ Отклонить (чек неверный)", callback_data=f"reject_{uid}")]
     ])
 
@@ -407,16 +448,22 @@ async def cb_admin_approve(call: CallbackQuery):
     tier_key = parts[2]
     t = TARIFFS.get(tier_key, TARIFFS["tier1"])
 
-    access_text = (
-        f"🎉 <b>Твоя оплата подтверждена! Добро пожаловать в M.GRANT!</b>\n\n"
-        f"Твой тариф: <b>{t['name']}</b>\n\n"
-        f"👉 <b>Напиши мне в личные сообщения @{ADMIN_USERNAME} слово «СТАРТ»</b>, и я сразу скину тебе победные письма SPARK, шаблон Harvard CV и мы начнём личную работу над твоей заявкой!"
-    )
+    if tier_key == "consult":
+        access_text = (
+            f"🎉 <b>Твоя оплата подтверждена! Запись на личную консультацию (40 минут) активна!</b>\n\n"
+            f"👉 <b>Напиши мне в личные сообщения @{ADMIN_USERNAME} слово «КОНСУЛЬТАЦИЯ»</b> и укажи, когда тебе удобно созвониться — мы текстом договоримся о точном времени звонка!"
+        )
+    else:
+        access_text = (
+            f"🎉 <b>Твоя оплата подтверждена! Добро пожаловать в US.GRANT!</b>\n\n"
+            f"Твой тариф: <b>{t['name']}</b>\n\n"
+            f"👉 <b>Напиши мне в личные сообщения @{ADMIN_USERNAME} слово «СТАРТ»</b>, и я сразу скину тебе победные письма SPARK, шаблон Harvard CV и мы начнём личную работу над твоей заявкой!"
+        )
 
     try:
         await bot.send_message(chat_id=client_id, text=access_text, parse_mode="HTML")
         await call.message.edit_caption(
-            caption=call.message.caption + "\n\n✅ <b>СТАТУС: ОДОБРЕНО (Доступ выдан клиенту)</b>",
+            caption=call.message.caption + "\n\n✅ <b>СТАТУС: ОДОБРЕНО (Уведомление отправлено клиенту)</b>",
             parse_mode="HTML"
         )
     except Exception as e:
@@ -439,7 +486,7 @@ async def cb_admin_reject(call: CallbackQuery):
         await call.answer(f"Ошибка: {e}", show_alert=True)
 
 async def main():
-    print("🚀 Бот M.GRANT успешно запущен и готов принимать оплаты!")
+    print("🚀 Бот US.GRANT успешно запущен и готов принимать оплаты!")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
